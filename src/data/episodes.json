@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "title": "Episodio 1: El Molde y la Galleta",
+    "description": "Descubre la diferencia entre Clases y Objetos con una analogía deliciosa.",
+    "duration": "5:30",
+    "audioSrc": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    "imageSrc": "https://placehold.co/600x600/1e293b/FFF?text=Episodio+1",
+    "color": "#3b82f6"
+  },
+  {
+    "id": 2,
+    "title": "Episodio 2: La Herencia Genética",
+    "description": "¿Por qué reescribir código? Aprende a heredar características como en la biología.",
+    "duration": "4:15",
+    "audioSrc": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+    "imageSrc": "https://placehold.co/600x600/1e293b/FFF?text=Episodio+2",
+    "color": "#8b5cf6"
+  },
+  {
+    "id": 3,
+    "title": "Episodio 3: La Caja Negra",
+    "description": "Encapsulamiento: Protege tu código de manos torpes.",
+    "duration": "6:00",
+    "audioSrc": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+    "imageSrc": "https://placehold.co/600x600/1e293b/FFF?text=Episodio+3",
+    "color": "#10b981"
+  }
+]
