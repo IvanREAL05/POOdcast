@@ -1,165 +1,195 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from './components/Layout/Layout';
 import PlayerBar from './components/AudioPlayer/PlayerBar';
-import episodesData from './data/episodes.json';
-import { Play, Pause, BarChart3 } from 'lucide-react';
 import Visualizer from './components/Visualizer/Visualizer';
+import EpisodeCard from './components/Cards/EpisodeCard';
+import ResumeNotification from './components/Cards/ResumeNotification';
+import episodesData from './data/episodes.json';
+import { useAudioPlayer } from './hooks/useAudioPlayer';
+import { RefreshCw } from 'lucide-react';
 
 function App() {
-  // --- ESTADO (La memoria de la App) ---
   const [episodes] = useState(episodesData);
-  const [currentEpisode, setCurrentEpisode] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const {
+    currentEpisode,
+    isPlaying,
+    currentTime,
+    duration,
+    playEpisode,
+    togglePlay,
+    seekTo,
+    changeVolume,
+    playNext,
+    playPrevious,
+    addToQueue, 
+    queue,
+    audioRef,
+    resumeFromLastSession,
+    saveFullSession,
+    volume,
+    showResumeNotification,  // ← Nuevo
+    pendingProgress,         // ← Nuevo
+    handleResume,           // ← Nuevo
+    handleCancelResume,     // ← Nuevo
+  } = useAudioPlayer();
 
-  // --- REF (Referencia al objeto de Audio HTML5 sin renderizar) ---
-  const audioRef = useRef(new Audio());
-  /*useEffect(() => {
-    // Esto es crucial para que el visualizador tenga permiso de "leer" el audio
-    audioRef.current.crossOrigin = "anonymous";
-  }, []);*/
-
-  // --- LÓGICA DE REPRODUCCIÓN ---
-  const playEpisode = (episode) => {
-    // Si clicamos el mismo que ya suena, pausamos/reanudamos
-    if (currentEpisode?.id === episode.id) {
-      togglePlay();
-      return;
-    }
-
-    // Si es uno nuevo:
-    audioRef.current.src = episode.audioSrc; // Cargamos URL
-    audioRef.current.play(); // Damos play
-    setCurrentEpisode(episode); // Actualizamos estado visual
-    setIsPlaying(true);
-  };
-
-  const togglePlay = () => {
-    if (isPlaying) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  // Efecto para limpiar el audio si cerramos la app (Unidad 1: Gestión de memoria)
+  // Cargar última sesión al iniciar la app
   useEffect(() => {
-    return () => {
-      audioRef.current.pause();
-      audioRef.current.src = "";
+    const loadLastSession = async () => {
+      setIsLoading(true);
+      
+      setTimeout(() => {
+        const resumed = resumeFromLastSession(episodes);
+        if (!resumed) {
+          console.log('No hay sesión previa para reanudar');
+        }
+        setIsLoading(false);
+      }, 500);
     };
+
+    loadLastSession();
   }, []);
 
+  // Guardar sesión cuando el usuario cierra o recarga
   useEffect(() => {
-    const audio = audioRef.current;
-
-    // Actualizar tiempo actual mientras suena
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-
-    // Actualizar duración total cuando carga el archivo
-    const handleLoadedMetadata = () => setDuration(audio.duration);
-
-    // Cuando termina, cambiar el icono a Play
-    const handleEnded = () => setIsPlaying(false);
-
-    // Suscribirse a eventos
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('ended', handleEnded);
-
-    // Limpieza (importante en React)
-    return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('ended', handleEnded);
+    const handleBeforeUnload = () => {
+      saveFullSession();
     };
-  }, []);
 
-  const handleSeek = (time) => {
-    audioRef.current.currentTime = time;
-    setCurrentTime(time);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      saveFullSession();
+    };
+  }, [currentEpisode, currentTime, duration, queue, volume]);
+
+  // Función auxiliar para formatear tiempo
+  const formatTime = (seconds) => {
+    if (!seconds) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleVolume = (volume) => {
-    audioRef.current.volume = volume;
-  };
+  // Mostrar loader mientras se recupera la sesión
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <RefreshCw size={40} className="animate-spin text-blue-500 mx-auto mb-4" />
+            <p className="text-slate-400">Recuperando tu última sesión...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
+      {/* Notificación de reanudación */}
+      {showResumeNotification && currentEpisode && pendingProgress && (
+        <ResumeNotification
+          episode={currentEpisode}
+          progress={pendingProgress}
+          onResume={handleResume}
+          onCancel={handleCancelResume}
+          autoHideDelay={10000}
+        />
+      )}
+
       <header className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Bienvenido a POOdcast 🎙️</h1>
         <p className="text-slate-400">Aprende Programación Orientada a Objetos escuchando.</p>
+        
+        {/* Banner de bienvenida con última sesión */}
+        {currentEpisode && (
+          <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <p className="text-sm text-blue-400">
+              🎧 Escuchando: <span className="font-semibold">{currentEpisode.title}</span>
+              {currentTime > 0 && (
+                <span className="ml-2 text-slate-400">
+                  • {formatTime(currentTime)} / {formatTime(duration)}
+                </span>
+              )}
+            </p>
+          </div>
+        )}
+        
+        {/* Indicador de cola mejorado */}
+        {queue.length > 0 && (
+          <div className="mt-4 flex items-center gap-3 text-sm">
+            <span className="bg-blue-500/20 text-blue-400 px-4 py-2 rounded-full flex items-center gap-2">
+              <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+              🎵 {queue.length} episodio(s) en cola
+            </span>
+            <button 
+              onClick={playNext}
+              className="text-slate-400 hover:text-white text-xs bg-slate-800/50 hover:bg-slate-800 px-3 py-2 rounded-full transition-all"
+            >
+              Reproducir siguiente →
+            </button>
+            {queue.length > 0 && (
+              <span className="text-xs text-slate-500">
+                Próximo: {queue[0]?.title.substring(0, 30)}...
+              </span>
+            )}
+          </div>
+        )}
       </header>
 
-      {/* Grid de Episodios */}
+      {/* Grid de episodios */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-24">
-        {episodes.map((ep) => {
-          // Calculamos si ESTA tarjeta específica está sonando
-          const isActive = currentEpisode?.id === ep.id;
-
-          return (
-            <div 
-              key={ep.id} 
-              onClick={() => playEpisode(ep)}
-              className={`
-                relative p-4 rounded-xl border transition-all cursor-pointer group
-                ${isActive 
-                  ? 'bg-blue-900/20 border-blue-500 shadow-lg shadow-blue-500/10' 
-                  : 'bg-slate-800/50 border-slate-700 hover:border-slate-500 hover:bg-slate-800'}
-              `}
-            >
-              {/* Imagen */}
-              <div className="aspect-square rounded-lg bg-slate-700 mb-4 overflow-hidden relative">
-                <img src={ep.imageSrc} alt={ep.title} className="w-full h-full object-cover" />
-                
-                {/* Overlay oscuro al hacer hover o si está activo */}
-                <div className={`absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                   {isActive && isPlaying ? (
-                     <div className="flex gap-1 items-end h-8">
-                        {/* Pequeña animación de barras simulada con CSS */}
-                        <span className="w-1 bg-white h-3 animate-pulse"></span>
-                        <span className="w-1 bg-white h-6 animate-pulse delay-75"></span>
-                        <span className="w-1 bg-white h-4 animate-pulse delay-150"></span>
-                     </div>
-                   ) : (
-                     <div className="bg-blue-500 p-3 rounded-full shadow-lg transform hover:scale-110 transition-transform">
-                       <Play fill="white" className="text-white ml-1" />
-                     </div>
-                   )}
-                </div>
-              </div>
-
-              <h3 className={`font-bold text-lg mb-1 truncate ${isActive ? 'text-blue-400' : 'text-white'}`}>
-                {ep.title}
-              </h3>
-              <p className="text-sm text-slate-400 line-clamp-2 mb-3">{ep.description}</p>
-            </div>
-          );
-        })}
+        {episodes.map((ep) => (
+          <EpisodeCard
+            key={ep.id}
+            episode={ep}
+            isActive={currentEpisode?.id === ep.id}
+            isPlaying={isPlaying}
+            onPlay={playEpisode}
+            onAddToQueue={addToQueue}
+            queue={queue}
+          />
+        ))}
       </div>
 
-      {/* Grid de Episodios (Esto ya lo tienes arriba, no cambies nada ahí) */}
-      {/* --- VISUALIZADOR (COMENTADO CORRECTAMENTE) --- */}
-      {/* {currentEpisode && (
-          <div className="fixed bottom-24 left-0 right-0 z-40 px-8 pointer-events-none opacity-50">
-            <Visualizer audioRef={audioRef} isPlaying={isPlaying} />
-          </div>
-      )} 
-      */}
+      {/* Visualizer */}
+      {currentEpisode && (
+        <div className="fixed bottom-24 left-0 right-0 z-40 px-8 pointer-events-none">
+          <Visualizer 
+            audioRef={audioRef}
+            isPlaying={isPlaying}
+            episodeType={currentEpisode.category || 'default'}
+          />
+        </div>
+      )}
 
-      {/* --- BARRA DE REPRODUCCIÓN --- */}
-      {/* IMPORTANTE: No comentes 'currentEpisode', es obligatorio para que funcione */}
+      {/* PlayerBar */}
       <PlayerBar 
-          currentEpisode={currentEpisode} 
-          isPlaying={isPlaying} 
-          onTogglePlay={togglePlay}
-          currentTime={currentTime}
-          duration={duration}
-          onSeek={handleSeek}
-          onVolumeChange={handleVolume}
+        currentEpisode={currentEpisode} 
+        isPlaying={isPlaying} 
+        onTogglePlay={togglePlay}
+        currentTime={currentTime}
+        duration={duration}
+        onSeek={seekTo}
+        onVolumeChange={changeVolume}
+        onNext={playNext}
+        onPrevious={playPrevious}
       />
+
+      {/* Botón flotante para guardar sesión manualmente */}
+      {currentEpisode && (
+        <button
+          onClick={saveFullSession}
+          className="fixed bottom-28 right-4 z-50 bg-slate-800 hover:bg-slate-700 text-slate-300 p-3 rounded-full shadow-lg transition-all hover:scale-110"
+          title="Guardar progreso manualmente"
+        >
+          <RefreshCw size={20} />
+        </button>
+      )}
     </Layout>
   );
 }
