@@ -220,6 +220,10 @@ export const useAudioPlayer = () => {
     }
   };
 
+  const removeFromQueue = (episodeId) => {
+    setQueue(prev => prev.filter(ep => ep.id !== episodeId));
+  };
+
   const clearQueue = () => {
     setQueue([]);
   };
@@ -303,6 +307,13 @@ export const useAudioPlayer = () => {
     localStorage.setItem('podcast-session', JSON.stringify(sessionData));
   };
 
+  const skipTime = (seconds) => {
+    const audio = audioRef.current;
+    const newTime = audio.currentTime + seconds;
+    audio.currentTime = Math.max(0, Math.min(newTime, audio.duration));
+    setCurrentTime(audio.currentTime);
+  };
+
   return {
     currentEpisode,
     isPlaying,
@@ -320,10 +331,12 @@ export const useAudioPlayer = () => {
     playEpisode,
     togglePlay,
     seekTo,
+    skipTime, // ← Nueva función
     changeVolume,
     changePlaybackRate,
     
     addToQueue,
+    removeFromQueue, // ← Nueva función
     playNext,
     playPrevious,
     clearQueue,

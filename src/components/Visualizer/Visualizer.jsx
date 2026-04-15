@@ -1,263 +1,185 @@
-import { useEffect, useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { 
+  OrbitControls, 
+  Float, 
+  MeshDistortMaterial, 
+  Stars,
+  PerspectiveCamera,
+  Text,
+  Html,
+  ContactShadows,
+  Environment,
+  PresentationControls
+} from '@react-three/drei';
+import * as THREE from 'three';
+import { Maximize2, Minimize2, Activity, Box } from 'lucide-react';
 
-// 🎨 Estilos predefinidos para diferentes tipos de episodios
-const EPISODE_STYLES = {
-  programacion: {
-    colors: ['#3b82f6', '#60a5fa', '#93c5fd'], // Azules
-    barWidth: 4,
-    spacing: 2,
-    shape: 'bars' // barras rectangulares
-  },
-  diseño: {
-    colors: ['#ec4899', '#f472b6', '#f9a8d4'], // Rosas
-    barWidth: 8,
-    spacing: 0,
-    shape: 'circles' // círculos en lugar de barras
-  },
-  negocios: {
-    colors: ['#10b981', '#34d399', '#6ee7b7'], // Verdes
-    barWidth: 2,
-    spacing: 1,
-    shape: 'wave' // forma de onda
-  },
-  default: {
-    colors: ['#8b5cf6', '#a78bfa', '#c4b5fd'], // Púrpura
-    barWidth: 6,
-    spacing: 3,
-    shape: 'bars'
-  }
-};
+let memoizedSource = null;
 
-const Visualizer = ({ audioRef, isPlaying, episodeType = 'default' }) => {
-  const canvasRef = useRef(null);
-  const audioContextRef = useRef(null);
-  const analyserRef = useRef(null);
-  const sourceRef = useRef(null);
-  const animationIdRef = useRef(null);
+const HUD = ({ analyzer, category }) => {
+  const [stats, setStats] = useState({ vol: 0 });
 
-  // Obtener estilo basado en el tipo de episodio
-  const style = EPISODE_STYLES[episodeType] || EPISODE_STYLES.default;
-
-  useEffect(() => {
-    if (!audioRef.current) return;
-
-    const initAudio = () => {
-      try {
-        // 1. Inicializar AudioContext si está suspendido o no existe
-        if (!audioContextRef.current) {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          audioContextRef.current = new AudioContext();
-        }
-
-        const ctx = audioContextRef.current;
-
-        // 2. Reanudar si está suspendido (política de autoplay)
-        if (ctx.state === 'suspended' && isPlaying) {
-          ctx.resume();
-        }
-
-        // 3. Crear Analizador si no existe
-        if (!analyserRef.current) {
-          analyserRef.current = ctx.createAnalyser();
-          analyserRef.current.fftSize = 256;
-          analyserRef.current.smoothingTimeConstant = 0.8; // Suavizar la animación
-        }
-
-        // 4. Conectar el Audio al Analizador (solo una vez)
-        if (!sourceRef.current && audioRef.current) {
-          try {
-            sourceRef.current = ctx.createMediaElementSource(audioRef.current);
-            sourceRef.current.connect(analyserRef.current);
-            analyserRef.current.connect(ctx.destination);
-          } catch (e) {
-            console.warn("CORS o conexión duplicada:", e);
-            return false;
-          }
-        }
-        
-        return true;
-      } catch (error) {
-        console.error("Error en AudioContext:", error);
-        return false;
-      }
-    };
-
-    const isReady = initAudio();
-    if (!isReady || !analyserRef.current) return;
-
-    // --- MEJORA 1: Diferentes formas de visualización ---
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    
-    // Ajustar tamaño del canvas al tamaño real
-    const resizeCanvas = () => {
-      const container = canvas.parentElement;
-      if (container) {
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight || 64;
-      }
-    };
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    const bufferLength = analyserRef.current.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-
-    // --- MEJORA 2: Múltiples estilos de visualización ---
-    const renderBars = () => {
-      const barWidth = style.barWidth;
-      const spacing = style.spacing;
-      const totalBars = Math.min(bufferLength, canvas.width / (barWidth + spacing));
-      const step = Math.floor(bufferLength / totalBars);
-      
-      let x = 0;
-      
-      for (let i = 0; i < totalBars; i++) {
-        const dataIndex = i * step;
-        const barHeight = (dataArray[dataIndex] / 255) * canvas.height;
-        
-        // Degradado basado en la altura
-        const gradient = ctx.createLinearGradient(0, canvas.height - barHeight, 0, canvas.height);
-        gradient.addColorStop(0, style.colors[0]);
-        gradient.addColorStop(0.5, style.colors[1] || style.colors[0]);
-        gradient.addColorStop(1, style.colors[2] || style.colors[0]);
-        
-        ctx.fillStyle = gradient;
-        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-        
-        x += barWidth + spacing;
-      }
-    };
-
-    const renderCircles = () => {
-      const centerY = canvas.height / 2;
-      const maxRadius = canvas.height / 3;
-      const spacing = canvas.width / bufferLength;
-      
-      for (let i = 0; i < bufferLength; i += 2) {
-        const radius = (dataArray[i] / 255) * maxRadius;
-        const x = i * spacing;
-        
-        ctx.beginPath();
-        ctx.arc(x, centerY, radius, 0, Math.PI * 2);
-        
-        const gradient = ctx.createRadialGradient(x, centerY, 0, x, centerY, radius);
-        gradient.addColorStop(0, style.colors[0]);
-        gradient.addColorStop(1, 'transparent');
-        
-        ctx.fillStyle = gradient;
-        ctx.fill();
-      }
-    };
-
-    const renderWave = () => {
-      ctx.beginPath();
-      ctx.strokeStyle = style.colors[0];
-      ctx.lineWidth = 2;
-      
-      const sliceWidth = canvas.width / bufferLength;
-      let x = 0;
-      
-      for (let i = 0; i < bufferLength; i++) {
-        const v = dataArray[i] / 128.0;
-        const y = v * canvas.height / 2;
-        
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
-        
-        x += sliceWidth;
-      }
-      
-      ctx.stroke();
-    };
-
-    // --- MEJORA 3: Sistema de partículas (nivel pro) ---
-    const particles = [];
-    const initParticles = () => {
-      for (let i = 0; i < 50; i++) {
-        particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          speed: Math.random() * 2 + 1,
-          size: Math.random() * 3 + 1
-        });
-      }
-    };
-    initParticles();
-
-    const renderParticles = () => {
-      const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-      const intensity = average / 255;
-      
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      particles.forEach(p => {
-        // Las partículas se mueven según el ritmo
-        p.y -= p.speed * intensity;
-        if (p.y < 0) {
-          p.y = canvas.height;
-          p.x = Math.random() * canvas.width;
-        }
-        
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * intensity, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(59, 130, 246, ${intensity})`;
-        ctx.fill();
-      });
-    };
-
-    const renderFrame = () => {
-      analyserRef.current.getByteFrequencyData(dataArray);
-      
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Seleccionar estilo según el tipo
-      switch(style.shape) {
-        case 'circles':
-          renderCircles();
-          break;
-        case 'wave':
-          renderWave();
-          break;
-        case 'particles':
-          renderParticles();
-          break;
-        case 'bars':
-        default:
-          renderBars();
-          break;
-      }
-      
-      animationIdRef.current = requestAnimationFrame(renderFrame);
-    };
-
-    if (isPlaying) {
-      renderFrame();
-      // Asegurar que el AudioContext esté activo
-      if (audioContextRef.current?.state === 'suspended') {
-        audioContextRef.current.resume();
-      }
-    }
-
-    return () => {
-      window.removeEventListener('resize', resizeCanvas);
-      if (animationIdRef.current) {
-        cancelAnimationFrame(animationIdRef.current);
-      }
-    };
-  }, [audioRef, isPlaying, episodeType]);
+  useFrame(() => {
+    if (!analyzer) return;
+    const data = new Uint8Array(analyzer.frequencyBinCount);
+    analyzer.getByteFrequencyData(data);
+    const avg = data.reduce((a, b) => a + b) / data.length;
+    setStats({ vol: Math.round(avg) });
+  });
 
   return (
-    <canvas 
-      ref={canvasRef} 
-      className="w-full h-16 block transition-all duration-300"
-      style={{
-        filter: 'drop-shadow(0 0 10px rgba(59,130,246,0.3))'
-      }}
-    />
+    <Html position={[-3, 2, 0]} className="pointer-events-none">
+      <div className="bg-black/60 backdrop-blur-xl p-4 rounded-2xl border border-white/10 text-white font-mono w-48 shadow-2xl">
+        <div className="text-[10px] text-blue-400 mb-2 font-bold tracking-tighter flex items-center gap-2">
+          <Activity size={12} /> SYSTEM_OVERLAY_v1
+        </div>
+        <div className="space-y-1">
+          <div className="flex justify-between text-[10px]">
+            <span>CLASS:</span>
+            <span className="text-blue-400">{category}</span>
+          </div>
+          <div className="flex justify-between text-[10px]">
+            <span>SIGNAL:</span>
+            <span className={stats.vol > 0 ? "text-green-400" : "text-red-400"}>
+              {stats.vol > 0 ? "STABLE" : "OFFLINE"}
+            </span>
+          </div>
+        </div>
+        <div className="mt-3 h-1 w-full bg-white/10 rounded-full overflow-hidden">
+          <div className="h-full bg-blue-500 transition-all duration-100" style={{ width: `${stats.vol}%` }} />
+        </div>
+      </div>
+    </Html>
+  );
+};
+
+const POOCore = ({ analyzer, category }) => {
+  const meshRef = useRef();
+  const [dataArray] = useState(() => new Uint8Array(analyzer?.frequencyBinCount || 128));
+
+  useFrame(() => {
+    if (!analyzer) return;
+    analyzer.getByteFrequencyData(dataArray);
+    const lowFreq = dataArray[2] / 255;
+    const scale = 1.2 + lowFreq * 1.5;
+    meshRef.current.scale.set(scale, scale, scale);
+    meshRef.current.rotation.y += 0.01;
+  });
+
+  const theme = {
+    'Básico': '#3b82f6',
+    'Intermedio': '#a855f7',
+    'Avanzado': '#f59e0b',
+    'default': '#06b6d4'
+  };
+
+  return (
+    <Float speed={1.5} rotationIntensity={0.5} floatIntensity={1}>
+      <mesh ref={meshRef}>
+        {category === 'Avanzado' ? (
+          <octahedronGeometry args={[1, 0]} />
+        ) : category === 'Intermedio' ? (
+          <torusKnotGeometry args={[0.6, 0.2, 128, 16]} />
+        ) : (
+          <boxGeometry args={[1, 1, 1]} />
+        )}
+        <MeshDistortMaterial 
+          color={theme[category] || theme.default} 
+          speed={4} 
+          distort={0.3} 
+          radius={1}
+        />
+      </mesh>
+    </Float>
+  );
+};
+
+const Visualizer = ({ audioRef, isPlaying, episodeType }) => {
+  const [analyzer, setAnalyzer] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    if (isPlaying && audioRef.current) {
+      try {
+        if (!memoizedSource) {
+          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const source = audioContext.createMediaElementSource(audioRef.current);
+          const newAnalyzer = audioContext.createAnalyser();
+          newAnalyzer.fftSize = 256;
+          source.connect(newAnalyzer);
+          newAnalyzer.connect(audioContext.destination);
+          memoizedSource = source;
+          setAnalyzer(newAnalyzer);
+        } else {
+          setAnalyzer(memoizedSource.context.activeAnalyzer || memoizedSource.context.createAnalyser());
+        }
+      } catch (e) {
+        console.warn("Audio connection active");
+      }
+    }
+  }, [isPlaying]);
+
+  return (
+    <div 
+      className={`
+        fixed transition-all duration-500 ease-out z-[60] pointer-events-auto
+        ${isExpanded 
+          ? 'inset-0 bg-slate-950' 
+          : 'bottom-28 right-8 w-64 h-64 rounded-3xl overflow-hidden border-2 border-slate-800 shadow-2xl hover:border-blue-500/50 bg-slate-900/80 backdrop-blur-md'}
+      `}
+    >
+      {/* Botones de Control */}
+      <div className="absolute top-4 right-4 z-[70] flex gap-2">
+        <button 
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-xl border border-white/10 transition-all active:scale-95"
+          title={isExpanded ? "Contraer" : "Expandir"}
+        >
+          {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+        </button>
+      </div>
+
+      {/* Overlay cuando no hay audio */}
+      {!isPlaying && !isExpanded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+          <Box className="text-slate-700 animate-pulse" size={40} />
+        </div>
+      )}
+
+      <Canvas shadows dpr={[1, 2]}>
+        <PerspectiveCamera makeDefault position={[0, 0, isExpanded ? 5 : 4]} />
+        <ambientLight intensity={0.5} />
+        <pointLight position={[10, 10, 10]} intensity={1} color="#3b82f6" />
+        <pointLight position={[-10, -10, -10]} intensity={0.5} color="#f43f5e" />
+        
+        <Stars radius={100} depth={50} count={2000} factor={4} saturation={0} fade speed={1} />
+        
+        <PresentationControls
+          global
+          config={{ mass: 1, tension: 500 }}
+          snap={{ mass: 2, tension: 1500 }}
+          rotation={[0, 0.3, 0]}
+          polar={[-Math.PI / 3, Math.PI / 3]}
+          azimuth={[-Math.PI / 1.4, Math.PI / 1.4]}
+        >
+          <POOCore analyzer={analyzer} category={episodeType} />
+        </PresentationControls>
+
+        {isExpanded && <HUD analyzer={analyzer} category={episodeType} />}
+        
+        <ContactShadows position={[0, -2, 0]} opacity={0.5} scale={10} blur={2.5} far={4} />
+        <Environment preset="night" />
+      </Canvas>
+
+      {/* Título Inmersivo */}
+      {isExpanded && (
+        <div className="absolute bottom-10 left-10 text-white">
+          <h2 className="text-4xl font-black italic tracking-tighter">POO <span className="text-blue-500">ENGINE</span></h2>
+          <p className="text-slate-500 font-mono text-xs uppercase">Multimedia Experience Module</p>
+        </div>
+      )}
+    </div>
   );
 };
 
