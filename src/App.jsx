@@ -11,9 +11,10 @@ import { useFavorites } from './hooks/useFavorites';
 import { RefreshCw } from 'lucide-react';
 
 // Páginas
+import HomePage from './pages/HomePage';
 import LibraryPage from './pages/LibraryPage';
 import EpisodeDetailPage from './pages/EpisodeDetailPage';
-import ThreeDExperiencePage from './pages/ThreeDExperiencePage'; // ← Añadido
+import ThreeDExperiencePage from './pages/ThreeDExperiencePage';
 
 function App() {
   const [episodes] = useState(episodesData);
@@ -102,10 +103,21 @@ function App() {
       {/* Definición de Rutas */}
       <main className="min-h-screen">
         <Routes>
-          <Route 
-            path="/" 
+          <Route
+            path="/"
             element={
-              <LibraryPage 
+              <HomePage
+                episodes={episodes}
+                currentEpisode={currentEpisode}
+                isPlaying={isPlaying}
+                onPlay={playEpisode}
+              />
+            }
+          />
+          <Route
+            path="/podcast"
+            element={
+              <LibraryPage
                 currentEpisode={currentEpisode}
                 isPlaying={isPlaying}
                 onPlay={playEpisode}
@@ -114,7 +126,7 @@ function App() {
                 isFavorite={isFavorite}
                 onToggleFavorite={toggleFavorite}
               />
-            } 
+            }
           />
           <Route 
             path="/episode/:id" 

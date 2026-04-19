@@ -1,9 +1,9 @@
 import { useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { 
-  OrbitControls, 
-  Float, 
-  MeshDistortMaterial, 
+import {
+  OrbitControls,
+  Float,
+  MeshDistortMaterial,
   Stars,
   PerspectiveCamera,
   Text,
@@ -14,8 +14,7 @@ import {
 } from '@react-three/drei';
 import * as THREE from 'three';
 import { Maximize2, Minimize2, Activity, Box } from 'lucide-react';
-
-let memoizedSource = null;
+import { getAnalyser } from '../../utils/sharedAudio';
 
 const HUD = ({ analyzer, category }) => {
   const [stats, setStats] = useState({ vol: 0 });
@@ -101,22 +100,8 @@ const Visualizer = ({ audioRef, isPlaying, episodeType }) => {
 
   useEffect(() => {
     if (isPlaying && audioRef.current) {
-      try {
-        if (!memoizedSource) {
-          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          const source = audioContext.createMediaElementSource(audioRef.current);
-          const newAnalyzer = audioContext.createAnalyser();
-          newAnalyzer.fftSize = 256;
-          source.connect(newAnalyzer);
-          newAnalyzer.connect(audioContext.destination);
-          memoizedSource = source;
-          setAnalyzer(newAnalyzer);
-        } else {
-          setAnalyzer(memoizedSource.context.activeAnalyzer || memoizedSource.context.createAnalyser());
-        }
-      } catch (e) {
-        console.warn("Audio connection active");
-      }
+      const a = getAnalyser(audioRef.current);
+      if (a) setAnalyzer(a);
     }
   }, [isPlaying]);
 

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(cat C:\\\\\\\\Users\\\\\\\\ivanc\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-ivanc-POOdcast\\\\\\\\e9186c81-4808-4571-ad4c-b220adccbae6\\\\\\\\tasks\\\\\\\\bobomzrmo.output)",
+      "Bash(npx vite *)",
+      "Bash(python3 -c \"import sys,json; lines=sys.stdin.readlines\\(\\)[-20:]; [print\\(json.loads\\(l\\).get\\('message',''\\)[:200] if isinstance\\(json.loads\\(l\\).get\\('message',''\\),str\\) else ''\\) for l in lines]\")",
+      "Bash(python3 -c ' *)",
+      "Bash(node -e ' *)",
+      "Bash(node *)"
+    ]
+  }
+}

@@ -63,3 +63,48 @@ body {
 .animate-slideOut {
   animation: slideOut 0.3s ease-in;
 }
+
+@keyframes float-keyword {
+  0%, 100% { transform: translateY(0px) rotate(var(--r, 0deg)); opacity: var(--op-low, 0.18); }
+  50%       { transform: translateY(-14px) rotate(var(--r, 0deg)); opacity: var(--op-high, 0.38); }
+}
+.animate-float-keyword {
+  animation: float-keyword ease-in-out infinite;
+}
+
+@keyframes blob-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(30px, -20px) scale(1.05); }
+  66%       { transform: translate(-20px, 15px) scale(0.97); }
+}
+.animate-blob { animation: blob-drift ease-in-out infinite; }
+
+@keyframes gradient-text-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+.animate-gradient-text {
+  background-size: 200% 200%;
+  animation: gradient-text-shift 4s ease infinite;
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+.animate-pulse-ring { animation: pulse-ring 2s ease-out infinite; }
+
+@keyframes holoFlicker {
+  0%, 89%, 91%, 93%, 100% { opacity: 1; }
+  90% { opacity: 0.82; }
+  92% { opacity: 0.92; }
+}
+.holo-flicker { animation: holoFlicker 7s ease-in-out infinite; }
+
+@keyframes scanDown {
+  0%   { transform: translateY(-120%); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(120%); opacity: 0; }
+}
+.holo-scan { animation: scanDown 4s linear infinite; }

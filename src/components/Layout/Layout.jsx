@@ -13,21 +13,9 @@ const Layout = ({ children }) => {
         </div>
 
         <nav className="flex-1 px-4 space-y-2 mt-4">
-          <SidebarItem 
-            to="/" 
-            icon={<Home size={20} />} 
-            text="Inicio" 
-          />
-          <SidebarItem 
-            to="/" 
-            icon={<Mic2 size={20} />} 
-            text="POOdcast" 
-          />
-          <SidebarItem 
-            to="/experience" 
-            icon={<Box size={20} />} 
-            text="Experiencia 3D" 
-          />
+          <SidebarItem to="/"           icon={<Home size={20} />} text="Inicio"        end />
+          <SidebarItem to="/podcast"    icon={<Mic2 size={20} />} text="POOdcast"      />
+          <SidebarItem to="/experience" icon={<Box  size={20} />} text="Experiencia 3D" />
         </nav>
 
         <div className="p-4 border-t border-slate-800 text-[10px] text-slate-500 font-mono">
@@ -48,13 +36,14 @@ const Layout = ({ children }) => {
 };
 
 // Componente auxiliar usando NavLink para gestión automática de estados
-const SidebarItem = ({ icon, text, to }) => (
-  <NavLink 
+const SidebarItem = ({ icon, text, to, end = false }) => (
+  <NavLink
     to={to}
+    end={end}
     className={({ isActive }) => `
       w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300
-      ${isActive 
-        ? 'bg-blue-600/10 text-blue-400 border border-blue-600/20 shadow-lg shadow-blue-500/5' 
+      ${isActive
+        ? 'bg-blue-600/10 text-blue-400 border border-blue-600/20 shadow-lg shadow-blue-500/5'
         : 'hover:bg-slate-800/50 text-slate-400 hover:text-white border border-transparent'
       }
     `}
