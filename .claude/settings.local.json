@@ -7,7 +7,12 @@
       "Bash(python3 -c \"import sys,json; lines=sys.stdin.readlines\\(\\)[-20:]; [print\\(json.loads\\(l\\).get\\('message',''\\)[:200] if isinstance\\(json.loads\\(l\\).get\\('message',''\\),str\\) else ''\\) for l in lines]\")",
       "Bash(python3 -c ' *)",
       "Bash(node -e ' *)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(xargs grep *)",
+      "Bash(mkdir -p \"C:/Users/ivanc/POOdcast/public/audios\")",
+      "Bash(mv \"C:/Users/ivanc/POOdcast/src/data/audios/\"*.mp3 \"C:/Users/ivanc/POOdcast/public/audios/\")",
+      "Bash(npx eslint *)",
+      "Bash(grep -v \"^$\")"
     ]
   }
 }

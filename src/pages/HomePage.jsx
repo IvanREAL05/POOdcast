@@ -54,7 +54,7 @@ const KEYWORDS = [
 ];
 
 const STATS = [
-  { icon: <Headphones size={20} />, value: '3', label: 'Episodios', color: '#3b82f6' },
+  { icon: <Headphones size={20} />, value: '10', label: 'Episodios', color: '#3b82f6' },
   { icon: <Layers     size={20} />, value: '4', label: 'Pilares POO', color: '#a855f7' },
   { icon: <Box        size={20} />, value: '3D', label: 'Experiencia', color: '#10b981' },
   { icon: <Zap        size={20} />, value: '∞', label: 'Audio reactivo', color: '#f59e0b' },

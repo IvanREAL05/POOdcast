@@ -9,6 +9,11 @@ export const useAudioPlayer = () => {
   const [playbackRate, setPlaybackRate] = useState(1);
   const [queue, setQueue] = useState([]);
   const [history, setHistory] = useState([]);
+
+  // Ref que siempre refleja el valor actual de isPlaying sin ser dependencia de otros effects
+  const isPlayingRef = useRef(false);
+  // Ref para playNext: evita el problema de TDZ en handleEnded
+  const playNextRef = useRef(null);
   
   // Nuevos estados para la notificación elegante
   const [showResumeNotification, setShowResumeNotification] = useState(false);
@@ -30,11 +35,13 @@ export const useAudioPlayer = () => {
     const handleEnded = () => {
       setIsPlaying(false);
       setCurrentTime(0);
-      if (queue.length > 0) playNext();
+      if (queue.length > 0) playNextRef.current?.();
     };
 
     const handleError = (e) => {
-      console.error('Error en el audio:', e);
+      const err = e.target?.error;
+      const codes = { 1: 'ABORTED', 2: 'NETWORK', 3: 'DECODE', 4: 'SRC_NOT_SUPPORTED' };
+      console.error('Error de audio:', err ? codes[err.code] || err.code : 'desconocido', audio.src);
     };
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
@@ -49,36 +56,38 @@ export const useAudioPlayer = () => {
       audio.removeEventListener('error', handleError);
       
       audio.pause();
-      audio.src = "";
+      audio.removeAttribute('src');
+      audio.load();
     };
   }, []);
 
+  // Mantiene el ref sincronizado con el estado real
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  // Cuando cambia el episodio: actualiza src y reproduce si ya estaba en play
   useEffect(() => {
     if (!currentEpisode?.audioSrc) return;
-
     const audio = audioRef.current;
     audio.src = currentEpisode.audioSrc;
-    audio.load();
-    
-    if (isPlaying) {
-      audio.play().catch(error => {
-        console.log("Autoplay bloqueado por el navegador:", error);
-        setIsPlaying(false);
-      });
-    }
-    
     audio.volume = volume;
     audio.playbackRate = playbackRate;
 
+    if (isPlayingRef.current) {
+      audio.play().catch(err => {
+        if (err.name !== 'AbortError') setIsPlaying(false);
+      });
+    }
   }, [currentEpisode]);
 
+  // Cuando cambia el estado play/pausa
   useEffect(() => {
     const audio = audioRef.current;
-    
     if (isPlaying) {
-      audio.play().catch(error => {
-        console.log("No se pudo reproducir:", error);
-        setIsPlaying(false);
+      if (!audio.src) return;
+      audio.play().catch(err => {
+        if (err.name !== 'AbortError') setIsPlaying(false);
       });
     } else {
       audio.pause();
@@ -212,6 +221,10 @@ export const useAudioPlayer = () => {
     }
   };
 
+  useEffect(() => {
+    playNextRef.current = playNext;
+  });
+
   const playPrevious = () => {
     if (history.length > 0) {
       const previousEpisode = history[history.length - 1];
@@ -256,27 +269,15 @@ export const useAudioPlayer = () => {
     try {
       const lastEpisodeData = localStorage.getItem('last-listened-episode');
       const shouldResume = localStorage.getItem('should-resume-last-episode');
-      
+
       if (lastEpisodeData && shouldResume === 'true') {
         const parsed = JSON.parse(lastEpisodeData);
-        
         const fullEpisode = episodesData.find(ep => ep.id === parsed.id);
-        
+
         if (fullEpisode) {
-          playEpisode(fullEpisode);
-          
-          const progress = localStorage.getItem(`episode-${fullEpisode.id}-progress`);
-          if (progress) {
-            const checkMetadata = setInterval(() => {
-              if (duration > 0) {
-                // No hacer seek automático, la notificación se encargará
-                clearInterval(checkMetadata);
-              }
-            }, 100);
-            
-            setTimeout(() => clearInterval(checkMetadata), 3000);
-          }
-          
+          // Solo carga el episodio sin reproducirlo — el navegador bloquea autoplay sin gesto
+          setCurrentEpisode(fullEpisode);
+          setIsPlaying(false);
           localStorage.removeItem('should-resume-last-episode');
           return true;
         }

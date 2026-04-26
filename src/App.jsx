@@ -156,28 +156,43 @@ function App() {
 
       {/* Visualizer (Persistente y Controlado) - Solo se muestra si no estamos en la página de experiencia */}
       {currentEpisode && location.pathname !== '/experience' && (
-        <Visualizer 
+        <Visualizer
           audioRef={audioRef}
           isPlaying={isPlaying}
-          episodeType={currentEpisode.category || 'default'}
+          episodeId={currentEpisode.id}
+          episodeTitle={currentEpisode.title}
         />
       )}
       {/* PlayerBar (Persistente) */}
-      <PlayerBar 
-        currentEpisode={currentEpisode} 
-        isPlaying={isPlaying} 
+      <PlayerBar
+        currentEpisode={currentEpisode}
+        isPlaying={isPlaying}
         onTogglePlay={togglePlay}
         currentTime={currentTime}
         duration={duration}
         onSeek={seekTo}
         onVolumeChange={changeVolume}
-        onNext={playNext}
-        onPrevious={playPrevious}
+        onNext={() => {
+          if (queue.length > 0) {
+            playNext();
+          } else if (currentEpisode) {
+            const idx = episodes.findIndex(ep => ep.id === currentEpisode.id);
+            if (idx < episodes.length - 1) playEpisode(episodes[idx + 1]);
+          }
+        }}
+        onPrevious={() => {
+          if (currentEpisode) {
+            const idx = episodes.findIndex(ep => ep.id === currentEpisode.id);
+            if (idx > 0) playEpisode(episodes[idx - 1]);
+          } else {
+            playPrevious();
+          }
+        }}
         onSkip={skipTime}
         playbackRate={playbackRate}
         onChangeRate={changePlaybackRate}
-        onToggleQueue={() => setIsQueueOpen(!isQueueOpen)} // ← Nuevo
-        queueLength={queue.length}                        // ← Nuevo
+        onToggleQueue={() => setIsQueueOpen(!isQueueOpen)}
+        queueLength={queue.length}
       />
 
       {/* Panel de Cola (Persistente) */}

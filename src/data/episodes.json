@@ -1,29 +1,112 @@
 [
   {
     "id": 1,
-    "title": "Episodio 1: El Molde y la Galleta",
-    "description": "Descubre la diferencia entre Clases y Objetos con una analogía deliciosa.",
-    "duration": "5:30",
-    "audioSrc": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-    "imageSrc": "https://placehold.co/600x600/1e293b/FFF?text=Episodio+1",
-    "color": "#3b82f6"
+    "title": "Capítulo 1: Pensar en objetos, no en código",
+    "description": "Antes de programar hay que aprender a mirar diferente. Descubre cómo los objetos cotidianos son la clave para entender la POO.",
+    "duration": "~10 min",
+    "audioSrc": "/audios/capitulo1.mp3",
+    "imageSrc": "https://placehold.co/600x600/1e293b/FFF?text=Cap+1",
+    "color": "#3b82f6",
+    "category": "Fundamentos",
+    "keywords": ["objeto", "objetos", "mundo real", "cotidiano", "pensar", "mentalidad", "introduccion", "que es poo", "primer episodio", "taza", "celular", "silla"]
   },
   {
     "id": 2,
-    "title": "Episodio 2: La Herencia Genética",
-    "description": "¿Por qué reescribir código? Aprende a heredar características como en la biología.",
-    "duration": "4:15",
-    "audioSrc": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-    "imageSrc": "https://placehold.co/600x600/1e293b/FFF?text=Episodio+2",
-    "color": "#8b5cf6"
+    "title": "Capítulo 2: Los objetos tienen cosas y hacen cosas",
+    "description": "Todo objeto tiene dos caras: lo que es y lo que hace. Aprende a distinguir atributos y acciones sin necesidad de código.",
+    "duration": "~10 min",
+    "audioSrc": "/audios/capitulo2.mp3",
+    "imageSrc": "https://placehold.co/600x600/1e293b/FFF?text=Cap+2",
+    "color": "#8b5cf6",
+    "category": "Fundamentos",
+    "keywords": ["atributos", "metodos", "acciones", "propiedades", "caracteristicas", "lo que es", "lo que hace", "estado", "comportamiento", "datos"]
   },
   {
     "id": 3,
-    "title": "Episodio 3: La Caja Negra",
-    "description": "Encapsulamiento: Protege tu código de manos torpes.",
-    "duration": "6:00",
-    "audioSrc": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-    "imageSrc": "https://placehold.co/600x600/1e293b/FFF?text=Episodio+3",
-    "color": "#10b981"
+    "title": "Capítulo 3: El molde invisible: qué es una clase",
+    "description": "¿De dónde salen los objetos? Descubre qué es una clase usando la analogía del molde de galletas.",
+    "duration": "~10 min",
+    "audioSrc": "/audios/capitulo3.mp3",
+    "imageSrc": "https://placehold.co/600x600/1e293b/FFF?text=Cap+3",
+    "color": "#10b981",
+    "category": "Clases y Objetos",
+    "keywords": ["clase", "clases", "molde", "instancia", "instancias", "plantilla", "new", "constructor", "tipo", "blueprint", "galleta"]
+  },
+  {
+    "id": 4,
+    "title": "Capítulo 4: Ordenar el caos: por qué usar objetos",
+    "description": "La POO no complica, protege y ordena. Entiende por qué dividir en objetos es la solución cuando los sistemas crecen.",
+    "duration": "~10 min",
+    "audioSrc": "/audios/capitulo4.mp3",
+    "imageSrc": "https://placehold.co/600x600/1e293b/FFF?text=Cap+4",
+    "color": "#f59e0b",
+    "category": "Fundamentos",
+    "keywords": ["orden", "organizar", "caos", "ventajas", "beneficios", "por que", "modularidad", "responsabilidad", "separar", "sistemas grandes", "escalable"]
+  },
+  {
+    "id": 5,
+    "title": "Capítulo 5: Herencia: cuando los objetos vienen de familia",
+    "description": "No todo tiene que empezar desde cero. Aprende cómo la herencia permite compartir lo común y extender lo específico.",
+    "duration": "~10 min",
+    "audioSrc": "/audios/capitulo5.mp3",
+    "imageSrc": "https://placehold.co/600x600/1e293b/FFF?text=Cap+5",
+    "color": "#ef4444",
+    "category": "Herencia",
+    "keywords": ["herencia", "padre", "hijo", "extends", "superclase", "subclase", "reutilizacion", "heredar", "familia", "animal", "perro", "gato", "jerarquia"]
+  },
+  {
+    "id": 6,
+    "title": "Capítulo 6: Encapsular es proteger",
+    "description": "No necesitas saber cómo funciona un microondas para usarlo. Entiende la encapsulación como una decisión de diseño, no una regla técnica.",
+    "duration": "~10 min",
+    "audioSrc": "/audios/capitulo6.mp3",
+    "imageSrc": "https://placehold.co/600x600/1e293b/FFF?text=Cap+6",
+    "color": "#06b6d4",
+    "category": "Encapsulamiento",
+    "keywords": ["encapsulamiento", "encapsulacion", "privado", "publico", "proteger", "acceso", "getter", "setter", "ocultar", "interfaz", "caja negra", "microondas"]
+  },
+  {
+    "id": 7,
+    "title": "Capítulo 7: Hablar sin saber cómo funciona",
+    "description": "Usar algo sin entender sus entrañas no es ignorancia, es el resultado de un buen diseño y acuerdos claros de comunicación.",
+    "duration": "~10 min",
+    "audioSrc": "/audios/capitulo7.mp3",
+    "imageSrc": "https://placehold.co/600x600/1e293b/FFF?text=Cap+7",
+    "color": "#f97316",
+    "category": "Diseño",
+    "keywords": ["interfaz", "contrato", "protocolo", "comunicacion", "acuerdo", "abstraccion", "usar sin saber", "api", "elevador", "boton", "restaurante"]
+  },
+  {
+    "id": 8,
+    "title": "Capítulo 8: ¡Acción! Un mismo mensaje, mil respuestas",
+    "description": "Una sola orden, múltiples reacciones. Descubre el polimorfismo: la capacidad de enviar un mensaje y recibir respuestas distintas según el objeto.",
+    "duration": "~10 min",
+    "audioSrc": "/audios/capitulo8.mp3",
+    "imageSrc": "https://placehold.co/600x600/1e293b/FFF?text=Cap+8",
+    "color": "#ec4899",
+    "category": "Polimorfismo",
+    "keywords": ["polimorfismo", "mismo mensaje", "override", "sobreescribir", "multiples respuestas", "flexible", "hablar", "guau", "miau", "animales", "accion"]
+  },
+  {
+    "id": 9,
+    "title": "Capítulo 9: Diseñar pensando en el futuro",
+    "description": "Diseñar bien no es predecir el futuro, es estar listo para él. Aprende por qué la POO existe para convivir con el cambio, no para huir de él.",
+    "duration": "~10 min",
+    "audioSrc": "/audios/capitulo9.mp3",
+    "imageSrc": "https://placehold.co/600x600/1e293b/FFF?text=Cap+9",
+    "color": "#6366f1",
+    "category": "Diseño",
+    "keywords": ["diseño", "futuro", "escalable", "mantenible", "cambio", "lego", "modular", "solid", "principios", "james bond", "batimovil", "jengibre"]
+  },
+  {
+    "id": 10,
+    "title": "Capítulo 10: POO no es código, es una forma de pensar",
+    "description": "El episodio final. La POO no es solo una técnica: es un mapa para organizar el caos, diseñar con intención y construir con futuro.",
+    "duration": "~11 min",
+    "audioSrc": "/audios/capitulo10.mp3",
+    "imageSrc": "https://placehold.co/600x600/1e293b/FFF?text=Cap+10",
+    "color": "#14b8a6",
+    "category": "Cierre",
+    "keywords": ["resumen", "final", "mentalidad", "forma de pensar", "pilares", "abstraccion", "repaso", "conclusion", "cierre", "todo", "completo"]
   }
 ]

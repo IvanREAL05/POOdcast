@@ -128,7 +128,7 @@ const EpisodeCard = ({
 
           {episode.duration && (
             <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-xs text-slate-300 px-2 py-1 rounded-full">
-              {formatDuration(episode.duration)}
+              {episode.duration}
             </div>
           )}
         </div>
